@@ -1,6 +1,5 @@
 package com.pcamposu.ps3.hfwserver
 
-import com.pcamposu.ps3.hfwserver.config.CliConfig
 import com.pcamposu.ps3.hfwserver.dns.Ps3DnsServer
 import com.pcamposu.ps3.hfwserver.util.NetworkUtils
 import groovy.transform.CompileStatic
@@ -10,7 +9,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationListener
 import org.springframework.context.ConfigurableApplicationContext
-import picocli.CommandLine
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -20,35 +18,21 @@ import java.util.concurrent.atomic.AtomicReference
 class Ps3HfwUpdateServerApplication {
 
 	static void main(String[] args) {
-		CliConfig cliConfig = new CliConfig()
-		CommandLine cmd = new CommandLine(cliConfig)
-
-		try {
-			def parseResult = cmd.parseArgs(args)
-			if (parseResult.isUsageHelpRequested()) {
-				cmd.usage(cmd.out)
-				System.exit(0)
-			}
-			cliConfig.validate()
-		} catch (Exception ex) {
-			cmd.err.println("Error: ${ex.message}")
-			cmd.err.println("Run with --help for usage information")
-			System.exit(1)
-		}
-
-		String detectedIp = cliConfig.localIp == "auto" ? NetworkUtils.getBestLocalIp() : cliConfig.localIp
+		String upstreamDns = System.getProperty("upstream.dns", "8.8.8.8")
+		String detectedIp = System.getProperty("local.ip", NetworkUtils.getBestLocalIp())
 		String firmwarePath = "./firmware/PS3UPDAT.PUP"
+		boolean verbose = Boolean.parseBoolean(System.getProperty("verbose", "false"))
 		int dnsPort = 53
 		int httpPort = 80
 
 		System.setProperty("server.port", String.valueOf(httpPort))
 		System.setProperty("firmware.path", firmwarePath)
-		System.setProperty("upstream.dns", cliConfig.upstreamDns)
+		System.setProperty("upstream.dns", upstreamDns)
 		System.setProperty("local.ip", detectedIp)
-		System.setProperty("ps3.verbose", String.valueOf(cliConfig.verbose))
-		System.setProperty("verbose", String.valueOf(cliConfig.verbose))
+		System.setProperty("ps3.verbose", String.valueOf(verbose))
+		System.setProperty("verbose", String.valueOf(verbose))
 		System.setProperty("ps3.dns.port", String.valueOf(dnsPort))
-		System.setProperty("ps3.dns.upstream", cliConfig.upstreamDns)
+		System.setProperty("ps3.dns.upstream", upstreamDns)
 		System.setProperty("ps3.dns.localIp", detectedIp)
 		System.setProperty("ps3.firmware.path", firmwarePath)
 
@@ -66,7 +50,7 @@ class Ps3HfwUpdateServerApplication {
 				ConfigurableApplicationContext context = event.applicationContext
 				contextRef.set(context)
 
-				if (cliConfig.verbose) {
+				if (verbose) {
 					ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME)
 					rootLogger.setLevel(ch.qos.logback.classic.Level.DEBUG)
 
@@ -79,7 +63,7 @@ class Ps3HfwUpdateServerApplication {
 					dnsServerRef.set(dnsServer)
 					dnsServer.start()
 
-					if (cliConfig.verbose) {
+					if (verbose) {
 						println ""
 						println "============================================"
 						println "  PS3 Firmware Update Server"
@@ -89,10 +73,8 @@ class Ps3HfwUpdateServerApplication {
 						println "HTTP Server:  Running on port 80"
 						println "Local IP:     ${detectedIp}"
 						println ""
-						if (cliConfig.localIp == "auto") {
-							println NetworkUtils.displayAvailableIps()
-							println ""
-						}
+						println NetworkUtils.displayAvailableIps()
+						println ""
 						println ""
 						println "Configure your PS3 DNS settings to: ${detectedIp}"
 						println ""
