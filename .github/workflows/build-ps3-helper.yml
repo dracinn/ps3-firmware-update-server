@@ -1,0 +1,121 @@
+name: Build PS3 Helper
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_ip:
+        description: "Desktop app IP baked into the helper"
+        required: true
+        default: "192.168.1.50"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-ps3-helper.yml"
+      - "homebrew/ps3-update-helper/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-ps3-helper.yml"
+      - "homebrew/ps3-update-helper/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build PS3 Update Helper
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      PS3DK_REF: 24a59feab0d3fa176ed1ecb051367741acd0bce0
+      HELPER_SERVER_IP: ${{ github.event.inputs.server_ip || '192.168.1.50' }}
+    steps:
+      - name: Checkout app
+        uses: actions/checkout@v5
+
+      - name: Checkout PS3DK
+        uses: actions/checkout@v5
+        with:
+          repository: FirebirdTA01/PS3DK
+          ref: ${{ env.PS3DK_REF }}
+          path: .ci/PS3DK
+
+      - name: Install host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential gcc-12 g++-12 cmake ninja-build texinfo \
+            bison flex libgmp-dev libmpfr-dev libmpc-dev libisl-dev \
+            zlib1g-dev libreadline-dev libncurses-dev libexpat1-dev \
+            libssl-dev libelf-dev python3 python3-dev git wget patch \
+            autoconf automake libtool zip unzip xz-utils file pkg-config
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache PS3DK toolchain
+        uses: actions/cache@v5
+        with:
+          path: |
+            .ci/PS3DK/src
+            .ci/PS3DK/stage/ps3dev
+            ~/ps3tc/build
+          key: ps3dk-${{ runner.os }}-${{ env.PS3DK_REF }}-v1
+          restore-keys: |
+            ps3dk-${{ runner.os }}-${{ env.PS3DK_REF }}-
+
+      - name: Build or restore PS3DK
+        working-directory: .ci/PS3DK
+        shell: bash
+        run: |
+          set -euo pipefail
+          source ./scripts/env.sh
+          if [[ -x "$PS3DEV/ppu/bin/powerpc64-ps3-elf-gcc" \
+             && -x "$PS3DEV/spu/bin/spu-elf-gcc" \
+             && -f "$PS3DK/.ps3dk-install-manifest" ]]; then
+            echo "Using cached PS3DK at $PS3DEV"
+            powerpc64-ps3-elf-gcc --version | head -1
+            spu-elf-gcc --version | head -1
+            exit 0
+          fi
+
+          ./scripts/bootstrap.sh
+          ./scripts/build-ppu-toolchain.sh
+          ./scripts/build-spu-toolchain.sh
+          ./scripts/build-psl1ght.sh
+          ./scripts/build-portlibs.sh
+          ./scripts/build-sdk.sh
+
+      - name: Configure helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .ci/PS3DK/scripts/env.sh
+          cmake -S homebrew/ps3-update-helper \
+            -B homebrew/ps3-update-helper/cmake-build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$PS3_TOOLCHAIN_ROOT/cmake/ps3-ppu-toolchain.cmake" \
+            -DSERVER_IP="$HELPER_SERVER_IP"
+
+      - name: Build helper
+        run: cmake --build homebrew/ps3-update-helper/cmake-build --verbose
+
+      - name: Stage artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="artifacts/ps3-update-helper"
+          mkdir -p "$out"
+          cp homebrew/ps3-update-helper/ps3-update-helper.elf "$out/"
+          cp homebrew/ps3-update-helper/ps3-update-helper.self "$out/"
+          cp homebrew/ps3-update-helper/ps3-update-helper.fake.self "$out/"
+          cp homebrew/ps3-update-helper/ps3-update-helper.pkg "$out/"
+          cp homebrew/ps3-update-helper/ps3-update-helper.gnpdrm.pkg "$out/"
+          (cd "$out" && sha256sum * > SHA256SUMS.txt)
+
+      - name: Upload helper artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: ps3-update-helper-${{ github.sha }}
+          path: artifacts/ps3-update-helper/

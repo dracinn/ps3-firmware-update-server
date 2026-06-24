@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#ifdef __PSL1GHT__
+#if defined(__PSL1GHT__) || defined(PS3_HELPER_USE_PSL1GHT_NET)
 #include <net/net.h>
 #include <sysmodule/sysmodule.h>
 #endif
@@ -21,7 +21,7 @@
 
 static int ps3_net_init(void)
 {
-#ifdef __PSL1GHT__
+#if defined(__PSL1GHT__) || defined(PS3_HELPER_USE_PSL1GHT_NET)
     sysModuleLoad(SYSMODULE_NET);
     return netInitialize();
 #else
@@ -31,7 +31,7 @@ static int ps3_net_init(void)
 
 static void ps3_net_shutdown(void)
 {
-#ifdef __PSL1GHT__
+#if defined(__PSL1GHT__) || defined(PS3_HELPER_USE_PSL1GHT_NET)
     netDeinitialize();
     sysModuleUnload(SYSMODULE_NET);
 #endif

@@ -6,7 +6,7 @@ SERVER_IP ?= 192.168.1.50
 PPU_CC ?= ppu-gcc
 PPU_STRIP ?= ppu-strip
 
-CFLAGS := -Wall -Wextra -O2 -DSERVER_IP=\"$(SERVER_IP)\"
+CFLAGS := -Wall -Wextra -O2 -DSERVER_IP=\"$(SERVER_IP)\" -DPS3_HELPER_USE_PSL1GHT_NET=1
 LDFLAGS :=
 
 SOURCES := $(SOURCE_DIR)/main.c
