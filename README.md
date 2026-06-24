@@ -8,6 +8,10 @@
   macOS desktop app for serving compatible PS3 firmware updates over DNS + HTTP.
 </p>
 
+<p align="center">
+  <a href="https://github.com/dracinn/ps3-firmware-update-server">dracinn/ps3-firmware-update-server</a>
+</p>
+
 ## Overview
 
 PS3 Firmware Update Server lets a PS3 install a selected firmware PUP through **System Update > Update via Internet**. The app runs a local DNS server on port 53 and an HTTP server on port 80, redirects PS3 update domains to your Mac, and serves the selected `PS3UPDAT.PUP`.
@@ -79,24 +83,42 @@ Downloaded or selected firmware is stored at:
 ## Project Structure
 
 ```text
-src/main/groovy/com/pcamposu/ps3/hfwserver/
-├── Ps3HfwUpdateServerApplication.groovy
-├── config/
-│   └── DnsServerConfig.groovy
-├── dns/
-│   └── Ps3DnsServer.groovy
-├── http/
-│   ├── controller/
-│   │   └── Ps3UpdateController.groovy
-│   └── service/
-│       └── UpdateListService.groovy
-├── model/
-│   └── RegionInfo.groovy
-└── util/
-    └── NetworkUtils.groovy
-
-src/main/kotlin/com/pcamposu/ps3/hfwserver/gui/
-└── Ps3HfwUpdateServerGui.kt
+dracinn/ps3-firmware-update-server
+├── README.md
+├── build.gradle
+├── settings.gradle
+├── assets/
+│   └── logo.png
+├── firmware/
+│   └── README.md
+├── gradle/wrapper/
+│   ├── gradle-wrapper.jar
+│   └── gradle-wrapper.properties
+├── src/main/groovy/com/pcamposu/ps3/hfwserver/
+│   ├── Ps3HfwUpdateServerApplication.groovy
+│   ├── config/
+│   │   └── DnsServerConfig.groovy
+│   ├── dns/
+│   │   └── Ps3DnsServer.groovy
+│   ├── http/
+│   │   ├── controller/
+│   │   │   └── Ps3UpdateController.groovy
+│   │   └── service/
+│   │       └── UpdateListService.groovy
+│   ├── model/
+│   │   └── RegionInfo.groovy
+│   └── util/
+│       └── NetworkUtils.groovy
+├── src/main/kotlin/com/pcamposu/ps3/hfwserver/gui/
+│   └── Ps3HfwUpdateServerGui.kt
+├── src/main/resources/
+│   ├── application.properties
+│   └── logback-spring.xml
+└── src/test/groovy/com/pcamposu/ps3/hfwserver/
+    ├── dns/
+    │   └── Ps3DnsServerTest.groovy
+    └── http/service/
+        └── UpdateListServiceTest.groovy
 ```
 
 ## Tests
