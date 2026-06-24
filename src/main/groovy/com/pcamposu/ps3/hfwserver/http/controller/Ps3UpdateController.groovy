@@ -25,13 +25,16 @@ class Ps3UpdateController {
 
     private final UpdateListService updateListService
     private final String firmwarePath
+    private final String manifestPath
 
     Ps3UpdateController(
             UpdateListService updateListService,
-            @Value('${ps3.firmware.path:firmware/PS3UPDAT.PUP}') String firmwarePath
+            @Value('${ps3.firmware.path:firmware/PS3UPDAT.PUP}') String firmwarePath,
+            @Value('${ps3.manifest.path:}') String manifestPath
     ) {
         this.updateListService = updateListService
         this.firmwarePath = firmwarePath
+        this.manifestPath = manifestPath
     }
 
     @GetMapping(value = ["/update/ps3/list/{region}/ps3-updatelist.txt", "/update/ps3/list/{region}/updatelist.txt"],
@@ -91,5 +94,61 @@ class Ps3UpdateController {
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_PLAIN)
                 .body(message)
+    }
+
+    @GetMapping(value = "/api/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<String> getStatus() {
+        File firmwareFile = new File(firmwarePath)
+        String body = "{" +
+                "\"app\":\"PS3 Firmware Update Server\"," +
+                "\"http\":\"running\"," +
+                "\"dns\":\"running\"," +
+                "\"firmwareReady\":${firmwareFile.exists()}," +
+                "\"firmwarePath\":\"${jsonEscape(firmwareFile.absolutePath)}\"," +
+                "\"firmwareSizeBytes\":${firmwareFile.exists() ? firmwareFile.length() : 0}," +
+                "\"installUrl\":\"/PS3UPDAT.PUP\"," +
+                "\"manifestUrl\":\"/api/firmware/manifest.json\"" +
+                "}"
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+    }
+
+    @GetMapping(value = "/api/firmware/manifest.json", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<String> getFirmwareManifest() {
+        File manifestFile = manifestPath ? new File(manifestPath) : null
+        if (manifestFile != null && manifestFile.exists()) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(manifestFile.text)
+        }
+
+        File firmwareFile = new File(firmwarePath)
+        String body = "{" +
+                "\"app\":\"PS3 Firmware Update Server\"," +
+                "\"sourceMode\":\"Unknown\"," +
+                "\"firmwareReady\":${firmwareFile.exists()}," +
+                "\"firmwarePath\":\"${jsonEscape(firmwareFile.absolutePath)}\"," +
+                "\"installUrl\":\"/PS3UPDAT.PUP\"," +
+                "\"instructions\":\"Start the desktop app and select a compatible firmware before installing on the PS3.\"," +
+                "\"selected\":null," +
+                "\"compatibleFirmware\":[]" +
+                "}"
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+    }
+
+    private static String jsonEscape(String value) {
+        return value
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\b", "\\b")
+                .replace("\f", "\\f")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t")
     }
 }

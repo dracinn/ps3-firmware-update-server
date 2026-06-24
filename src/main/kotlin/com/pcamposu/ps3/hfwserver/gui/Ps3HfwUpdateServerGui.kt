@@ -24,6 +24,7 @@ import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
+import java.time.Instant
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -61,6 +62,7 @@ fun main() {
 
 private class Ps3HfwUpdateServerGui : JFrame(APP_NAME) {
     private val firmwareFile = defaultFirmwareFile()
+    private val manifestFile = defaultManifestFile()
     private val systemProfileCombo = JComboBox(SystemProfile.entries.toTypedArray())
     private val hardwareProfileCombo = JComboBox(HardwareProfile.entries.toTypedArray())
     private val firmwareSourceModeCombo = JComboBox(FirmwareSourceMode.entries.toTypedArray())
@@ -114,6 +116,7 @@ private class Ps3HfwUpdateServerGui : JFrame(APP_NAME) {
 
         refreshNetworkAddresses()
         refreshFirmwareStatus()
+        writeCompatibilityManifest(emptyList())
         updateButtons(false)
 
         startButton.addActionListener { startServer() }
@@ -281,7 +284,7 @@ private class Ps3HfwUpdateServerGui : JFrame(APP_NAME) {
 
         thread(name = "ps3-hfw-gui-starter", isDaemon = true) {
             try {
-                val handle = ServerHandle.start(firmwareFile, localIp, upstreamDns, verboseCheck.isSelected, ::appendLog)
+                val handle = ServerHandle.start(firmwareFile, manifestFile, localIp, upstreamDns, verboseCheck.isSelected, ::appendLog)
                 SwingUtilities.invokeLater {
                     serverHandle = handle
                     status("Running")
@@ -342,6 +345,7 @@ private class Ps3HfwUpdateServerGui : JFrame(APP_NAME) {
             } catch (ex: Exception) {
                 SwingUtilities.invokeLater {
                     appendLog("Failed to fetch GitHub releases: ${rootMessage(ex)}")
+                    writeCompatibilityManifest(emptyList())
                     showError("GitHub update check failed", rootMessage(ex))
                 }
             } finally {
@@ -378,6 +382,7 @@ private class Ps3HfwUpdateServerGui : JFrame(APP_NAME) {
                 FirmwareReleaseClient.downloadFirmware(asset, firmwareFile) { appendLog(it) }
                 SwingUtilities.invokeLater {
                     refreshFirmwareStatus()
+                    writeCompatibilityManifest(listOf(asset))
                     appendLog("Firmware ready at ${firmwareFile.absolutePath}")
                 }
             } catch (ex: Exception) {
@@ -405,6 +410,7 @@ private class Ps3HfwUpdateServerGui : JFrame(APP_NAME) {
             targetDir.mkdirs()
             chooser.selectedFile.copyTo(firmwareFile, overwrite = true)
             refreshFirmwareStatus()
+            writeCompatibilityManifest(emptyList())
             appendLog("Copied firmware to ${firmwareFile.absolutePath}")
         }
     }
@@ -525,6 +531,7 @@ private class Ps3HfwUpdateServerGui : JFrame(APP_NAME) {
     private fun populateFirmwareSourceCombo(): List<FirmwareAsset> {
         if (selectedFirmwareSourceMode() != FirmwareSourceMode.REMOTE) {
             remoteFirmwareLabel.text = "Using local PS3UPDAT.PUP"
+            writeCompatibilityManifest(emptyList())
             return emptyList()
         }
 
@@ -535,6 +542,7 @@ private class Ps3HfwUpdateServerGui : JFrame(APP_NAME) {
             .sortedWith(childVariant.sorter(mainVariant))
 
         remoteFirmwareLabel.text = shownAssets.firstOrNull()?.toString() ?: "No matching remote firmware"
+        writeCompatibilityManifest(shownAssets)
         return shownAssets
     }
 
@@ -549,6 +557,61 @@ private class Ps3HfwUpdateServerGui : JFrame(APP_NAME) {
             .filter { mainVariant.matches(it) && childVariant.matches(it) }
             .sortedWith(childVariant.sorter(mainVariant))
             .firstOrNull()
+    }
+
+    private fun writeCompatibilityManifest(assets: List<FirmwareAsset>) {
+        runCatching {
+            val entries = if (selectedFirmwareSourceMode() == FirmwareSourceMode.LOCAL && firmwareFile.isFile) {
+                listOf(
+                    mapOf(
+                        "name" to "Local PS3UPDAT.PUP",
+                        "tag" to "local",
+                        "asset" to firmwareFile.name,
+                        "track" to "Local file",
+                        "variant" to "User selected",
+                        "sizeBytes" to firmwareFile.length(),
+                        "sha256" to null,
+                        "downloadUrl" to null,
+                        "compatible" to false,
+                        "compatibility" to "user-selected-local"
+                    )
+                )
+            } else {
+                assets.map { asset ->
+                    mapOf(
+                        "name" to asset.releaseName,
+                        "tag" to asset.tagName,
+                        "asset" to asset.assetName,
+                        "track" to asset.trackName(),
+                        "variant" to asset.variantName(),
+                        "sizeBytes" to asset.size,
+                        "sha256" to asset.sha256,
+                        "downloadUrl" to asset.downloadUrl,
+                        "compatible" to true,
+                        "compatibility" to "filtered-by-app"
+                    )
+                }
+            }
+            val manifest = mapOf(
+                "app" to APP_NAME,
+                "generatedAt" to Instant.now().toString(),
+                "sourceMode" to selectedFirmwareSourceMode().label,
+                "systemProfile" to selectedSystemProfile().label,
+                "hardwareStatus" to selectedHardwareProfile().label,
+                "mainVariant" to selectedMainVariant().label,
+                "childVariant" to selectedChildVariant().label,
+                "firmwareReady" to firmwareFile.isFile,
+                "firmwarePath" to firmwareFile.absolutePath,
+                "installUrl" to "/PS3UPDAT.PUP",
+                "instructions" to "Start the desktop server, set the PS3 DNS to this Mac, then use Settings > System Update > Update via Internet.",
+                "selected" to entries.firstOrNull(),
+                "compatibleFirmware" to entries
+            )
+            manifestFile.parentFile.mkdirs()
+            manifestFile.writeText(ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(manifest))
+        }.onFailure {
+            appendLog("Could not write compatibility manifest: ${rootMessage(it)}")
+        }
     }
 }
 
@@ -698,7 +761,7 @@ private data class FirmwareAsset(
         return "${trackName()} ${variantName()} - $releaseName (${humanSize(size)})"
     }
 
-    private fun trackName(): String {
+    fun trackName(): String {
         return when {
             isDpex -> "CFW-DPEX"
             isPex -> "CFW-PEX"
@@ -708,7 +771,7 @@ private data class FirmwareAsset(
         }
     }
 
-    private fun variantName(): String {
+    fun variantName(): String {
         return when {
             isNoBd && isNoBt -> "noBD+noBT"
             isNoBd -> "noBD"
@@ -818,7 +881,7 @@ private class ServerHandle(
     }
 
     companion object {
-        fun start(firmwareFile: File, localIp: String, upstreamDns: String, verbose: Boolean, log: (String) -> Unit): ServerHandle {
+        fun start(firmwareFile: File, manifestFile: File, localIp: String, upstreamDns: String, verbose: Boolean, log: (String) -> Unit): ServerHandle {
             val firmwarePath = firmwareFile.absolutePath
             System.setProperty("server.port", "80")
             System.setProperty("firmware.path", firmwarePath)
@@ -830,6 +893,7 @@ private class ServerHandle(
             System.setProperty("ps3.dns.upstream", upstreamDns)
             System.setProperty("ps3.dns.localIp", localIp)
             System.setProperty("ps3.firmware.path", firmwarePath)
+            System.setProperty("ps3.manifest.path", manifestFile.absolutePath)
 
             val appClass = Class.forName(SERVER_APP_CLASS)
             val app = SpringApplication(appClass).apply {
@@ -873,6 +937,10 @@ private fun defaultFirmwareFile(): File {
         File(home, ".$APP_NAME")
     }
     return File(appDataDir, "firmware/PS3UPDAT.PUP")
+}
+
+private fun defaultManifestFile(): File {
+    return File(defaultFirmwareFile().parentFile, "compatibility-manifest.json")
 }
 
 private fun isIpv4(value: String): Boolean {

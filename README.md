@@ -18,6 +18,8 @@ PS3 Firmware Update Server lets a PS3 install a selected firmware PUP through **
 
 The Kotlin desktop app can download compatible firmware from [dracinn/Firmware-Updates](https://github.com/dracinn/Firmware-Updates) or use a local `PS3UPDAT.PUP` file.
 
+The repository also includes a PS3 homebrew helper scaffold in `homebrew/ps3-update-helper`. The helper can query the running desktop app, confirm that compatible firmware is ready, and show the selected install target before you run the normal PS3 update flow.
+
 ## Firmware Tracks
 
 Remote mode follows the firmware host repository layout:
@@ -80,6 +82,15 @@ Downloaded or selected firmware is stored at:
 3. The PS3 downloads the spoofed update list from the local HTTP server.
 4. The PS3 downloads `PS3UPDAT.PUP` from the local HTTP server.
 
+The app also exposes local JSON endpoints for the homebrew helper:
+
+```text
+http://<mac-ip>/api/status
+http://<mac-ip>/api/firmware/manifest.json
+```
+
+The manifest contains only the firmware entries compatible with the currently selected system profile, hardware status, main variant, and child variant.
+
 ## Project Structure
 
 ```text
@@ -94,6 +105,11 @@ dracinn/ps3-firmware-update-server
 ├── gradle/wrapper/
 │   ├── gradle-wrapper.jar
 │   └── gradle-wrapper.properties
+├── homebrew/ps3-update-helper/
+│   ├── Makefile
+│   ├── README.md
+│   └── source/
+│       └── main.c
 ├── src/main/groovy/com/pcamposu/ps3/hfwserver/
 │   ├── Ps3HfwUpdateServerApplication.groovy
 │   ├── config/
