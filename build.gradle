@@ -1,12 +1,14 @@
 plugins {
 	id 'groovy'
+	id 'application'
+	id 'org.jetbrains.kotlin.jvm' version '2.2.21'
 	id 'org.springframework.boot' version '4.0.1'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.pcamposu.ps3'
 version = '1.0.0'
-description = 'PS3 HFW Update Server - DNS + HTTP server for HFW distribution'
+description = 'PS3 Firmware Update Server - DNS + HTTP server for PS3 firmware distribution'
 
 jar {
 	archiveBaseName = 'hfwserver'
@@ -31,11 +33,52 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.apache.groovy:groovy'
+	implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'dnsjava:dnsjava:3.6.3'
 	implementation 'info.picocli:picocli:4.7.6'
 	annotationProcessor 'info.picocli:picocli-codegen:4.7.6'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+springBoot {
+	mainClass = 'com.pcamposu.ps3.hfwserver.Ps3HfwUpdateServerApplication'
+}
+
+application {
+	applicationName = 'PS3 Firmware Update Server'
+	mainClass = 'com.pcamposu.ps3.hfwserver.gui.Ps3HfwUpdateServerGuiKt'
+}
+
+tasks.register('runGui', JavaExec) {
+	group = 'application'
+	description = 'Run the Kotlin desktop GUI for PS3 Firmware Update Server'
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = 'com.pcamposu.ps3.hfwserver.gui.Ps3HfwUpdateServerGuiKt'
+}
+
+tasks.register('packageMacOS', Exec) {
+	group = 'distribution'
+	description = 'Build a macOS .app image for the Kotlin GUI'
+	dependsOn tasks.named('installDist')
+
+	def appName = 'PS3 Firmware Update Server'
+	def installLibDir = layout.buildDirectory.dir("install/${appName}/lib")
+	def outputDir = layout.buildDirectory.dir('jpackage')
+
+	doFirst {
+		delete(outputDir)
+	}
+
+	commandLine 'jpackage',
+			'--type', 'app-image',
+			'--name', appName,
+			'--app-version', version.toString(),
+			'--input', installLibDir.get().asFile.absolutePath,
+			'--main-jar', "hfwserver-${version}-plain.jar",
+			'--main-class', 'com.pcamposu.ps3.hfwserver.gui.Ps3HfwUpdateServerGuiKt',
+			'--dest', outputDir.get().asFile.absolutePath
 }
 
 tasks.named('test') {

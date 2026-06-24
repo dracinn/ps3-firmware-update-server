@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/logo.png" alt="PS3 HFW Update Server Logo" width="200"/>
+  <img src="assets/logo.png" alt="PS3 Firmware Update Server Logo" width="200"/>
 </p>
 
-<h1 align="center">PS3 HFW Update Server</h1>
+<h1 align="center">PS3 Firmware Update Server</h1>
 
 <p align="center">
   <a href="https://github.com/pcamposu/ps3-hfw-update-server/releases">
@@ -26,12 +26,12 @@
 </p>
 
 <p align="center">
-  DNS + HTTP server for distribution of PS3 HFW (Hybrid Firmware) updates, enabling installation without a USB drive on consoles with OFW (Official Firmware) or HFW (Hybrid Firmware).
+  DNS + HTTP server for PS3 firmware updates, with a Kotlin desktop app for choosing compatible CFW-CEX, CFW-PEX, CFW-DPEX, or HFW releases.
 </p>
 
 ## Overview
 
-This server intercepts PS3 update requests and serves a custom HFW PUP file instead of downloading from Sony's servers. It works by:
+This server intercepts PS3 update requests and serves a selected `PS3UPDAT.PUP` file instead of downloading from Sony's servers. It works by:
 
 1. **DNS Server**: Redirects PS3 update domains (`*.ps3.update.playstation.net`) to the machine
 2. **HTTP Server**: Serves the spoofed `updatelist.txt` and `PS3UPDAT.PUP` file
@@ -47,9 +47,9 @@ This server intercepts PS3 update requests and serves a custom HFW PUP file inst
 
 Go to the [Releases](https://github.com/pcamposu/ps3-hfw-update-server/releases) page and download the latest `hfwserver-*.jar` file.
 
-### 2. Download HFW Firmware
+### 2. Download Firmware
 
-Download the HFW firmware from the [PS3-Pro/Firmware-Updates](https://github.com/PS3-Pro/Firmware-Updates/) GitHub repository:
+Use the desktop app to download a compatible release from [dracinn/Firmware-Updates](https://github.com/dracinn/Firmware-Updates), or place your own firmware file at `firmware/PS3UPDAT.PUP`:
 
 ```bash
 curl -L -o firmware/PS3UPDAT.PUP \
@@ -221,6 +221,38 @@ docker stop ps3-hfw-server && docker rm ps3-hfw-server
 - Java 17 or higher
 - Gradle (included via wrapper)
 
+### Kotlin Desktop GUI
+
+The project also includes a Kotlin Swing desktop launcher for starting and stopping the existing DNS + HTTP server.
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew runGui
+```
+
+The GUI lets you:
+
+- choose/copy `PS3UPDAT.PUP` into `firmware/PS3UPDAT.PUP`
+- filter remote firmware by system profile and hardware status
+- choose Remote GitHub firmware or Local PS3UPDAT.PUP at the top of the window
+- automatically check [dracinn/Firmware-Updates](https://github.com/dracinn/Firmware-Updates) for release `.PUP` assets in Remote mode
+- choose a main firmware track: CFW-CEX, CFW-PEX, CFW-DPEX, or HFW
+- choose a child variant such as Standard, noBD, noBT, or noBD+noBT when available
+- download the selected firmware release into `firmware/PS3UPDAT.PUP`
+- select the local IP address to use for PS3 DNS
+- configure the upstream DNS server
+- start and stop the server
+- copy the DNS address to use on the PS3
+
+Build the macOS app image:
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew packageMacOS
+```
+
+The app is created at `build/jpackage/PS3 Firmware Update Server.app`.
+
+DNS still binds to port 53 and HTTP still binds to port 80, so administrator privileges may be required on macOS/Linux.
+
 ### Build from Source
 
 ```bash
@@ -248,7 +280,7 @@ java -jar build/libs/hfwserver-{version}.jar --verbose
 
 **Note:** DNS runs on port 53 and HTTP on port 80 (standard ports required by PS3).
 
-The firmware file must always be at `./firmware/PS3UPDAT.PUP`.
+For CLI usage, the firmware file must be at `./firmware/PS3UPDAT.PUP`.
 The server reports version 9.00 to force PS3 updates (hardcoded in UpdateListService).
 
 ---
@@ -266,7 +298,7 @@ When your PS3 tries to update:
 
 The HTTP server serves:
 - `/update/ps3/list/{region}/ps3-updatelist.txt` - Spoofed update list with Target ID
-- `/PS3UPDAT.PUP` - Your HFW firmware file
+- `/PS3UPDAT.PUP` - Your selected firmware file
 
 
 ---

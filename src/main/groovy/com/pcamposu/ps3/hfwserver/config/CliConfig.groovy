@@ -3,8 +3,8 @@ package com.pcamposu.ps3.hfwserver.config
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
-@Command(name = "ps3-hfw-update-server", mixinStandardHelpOptions = true,
-        description = "PS3 HFW Update Server - DNS + HTTP server for HFW distribution")
+@Command(name = "ps3-firmware-update-server", mixinStandardHelpOptions = true,
+        description = "PS3 Firmware Update Server - DNS + HTTP server for PS3 firmware distribution")
 class CliConfig {
 
     @Option(names = ["--upstream-dns"], description = "Upstream DNS server (default: \${DEFAULT-VALUE})")

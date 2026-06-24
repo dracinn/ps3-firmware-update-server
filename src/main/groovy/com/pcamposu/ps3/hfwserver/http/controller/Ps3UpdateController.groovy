@@ -82,7 +82,7 @@ class Ps3UpdateController {
         File firmwareFile = new File(firmwarePath)
         String canonicalPath = firmwareFile.canonicalPath
 
-        String message = "PS3 HFW Update Server\n\n" +
+        String message = "PS3 Firmware Update Server\n\n" +
                 "DNS Server: Running\n" +
                 "HTTP Server: Running\n" +
                 "Firmware Path: $firmwarePath\n\n" +

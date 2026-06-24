@@ -82,7 +82,7 @@ class Ps3HfwUpdateServerApplication {
 					if (cliConfig.verbose) {
 						println ""
 						println "============================================"
-						println "  PS3 HFW Update Server"
+						println "  PS3 Firmware Update Server"
 						println "============================================"
 						println ""
 						println "DNS Server:   Running on port 53"
@@ -100,7 +100,7 @@ class Ps3HfwUpdateServerApplication {
 						println "============================================"
 						println ""
 					} else {
-						log.info("PS3 HFW Update Server started - DNS: port 53, HTTP: port 80, IP: ${detectedIp}")
+						log.info("PS3 Firmware Update Server started - DNS: port 53, HTTP: port 80, IP: ${detectedIp}")
 						log.info("Configure your PS3 DNS settings to: ${detectedIp}")
 					}
 				} catch (Exception e) {

@@ -1,11 +1,11 @@
-# PS3 HFW Firmware Directory
+# PS3 Firmware Directory
 
 Place your PS3UPDAT.PUP file in this directory.
 
-## How to Download HFW
+## How to Download Firmware
 
-1. Visit [PSX-Place HFW Releases](https://www.psx-place.com/threads/hfw-4-92-1-hybrid-firmware-official-release.46954/)
-2. Download the latest HFW version
+1. Use the desktop app to download a compatible release from [dracinn/Firmware-Updates](https://github.com/dracinn/Firmware-Updates)
+2. Or download a trusted CFW-CEX, CFW-PEX, CFW-DPEX, or HFW release manually
 3. Extract the downloaded archive
 4. Find the `PS3UPDAT.PUP` file
 5. Copy it to this directory
@@ -38,4 +38,4 @@ A valid PS3UPDAT.PUP file should be:
 - Named exactly `PS3UPDAT.PUP`
 - Not corrupted or incomplete
 
-**Note:** Do NOT use official Sony firmware PUP files. Use HFW (Hybrid Firmware) from trusted sources like PSX-Place.
+**Note:** Do NOT use official Sony firmware PUP files. Use only trusted CFW-CEX, CFW-PEX, CFW-DPEX, or HFW PUP files.
