@@ -2,14 +2,26 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #if defined(__PSL1GHT__) || defined(PS3_HELPER_USE_PSL1GHT_NET)
-#include <net/net.h>
-#include <sysmodule/sysmodule.h>
+#include <cell/sysmodule.h>
+int netInitialize(void);
+int netDeinitialize(void);
+
+int sysModuleLoad(int id)
+{
+    return cellSysmoduleLoadModule((uint16_t)id);
+}
+
+int sysModuleUnload(int id)
+{
+    return cellSysmoduleUnloadModule((uint16_t)id);
+}
 #endif
 
 #ifndef SERVER_IP
@@ -22,7 +34,7 @@
 static int ps3_net_init(void)
 {
 #if defined(__PSL1GHT__) || defined(PS3_HELPER_USE_PSL1GHT_NET)
-    sysModuleLoad(SYSMODULE_NET);
+    cellSysmoduleLoadModule(CELL_SYSMODULE_NET);
     return netInitialize();
 #else
     return 0;
@@ -33,7 +45,7 @@ static void ps3_net_shutdown(void)
 {
 #if defined(__PSL1GHT__) || defined(PS3_HELPER_USE_PSL1GHT_NET)
     netDeinitialize();
-    sysModuleUnload(SYSMODULE_NET);
+    cellSysmoduleUnloadModule(CELL_SYSMODULE_NET);
 #endif
 }
 

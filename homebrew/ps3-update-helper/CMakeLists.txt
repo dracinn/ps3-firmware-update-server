@@ -12,7 +12,7 @@ target_compile_definitions(ps3-update-helper PRIVATE
     SERVER_IP="${SERVER_IP}"
     PS3_HELPER_USE_PSL1GHT_NET=1)
 target_link_libraries(ps3-update-helper PRIVATE
-    net_stub sysmodule_stub c_stub sysutil rt lv2 m)
+    net sysmodule_stub c_stub sysutil rt lv2 m)
 
 ps3_add_self(ps3-update-helper)
 ps3_add_pkg(ps3-update-helper

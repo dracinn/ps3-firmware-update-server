@@ -105,6 +105,10 @@ dracinn/ps3-firmware-update-server
 ├── gradle/wrapper/
 │   ├── gradle-wrapper.jar
 │   └── gradle-wrapper.properties
+├── ci/vm/
+│   ├── build-ps3-helper-in-vm.sh
+│   ├── ps3-helper-lima.yaml
+│   └── start-ps3-helper-vm.sh
 ├── homebrew/ps3-update-helper/
 │   ├── Makefile
 │   ├── README.md

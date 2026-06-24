@@ -36,6 +36,22 @@ SHA256SUMS.txt
 
 The first run builds and caches PS3DK, so it can take a while. Later runs should reuse the cached toolchain.
 
+## Local VM Build
+
+On macOS, this repository can build the helper inside an Ubuntu Lima VM:
+
+```bash
+brew install lima
+./ci/vm/start-ps3-helper-vm.sh
+./ci/vm/build-ps3-helper-in-vm.sh 192.168.1.50
+```
+
+VM-built artifacts are copied to:
+
+```text
+artifacts/ps3-update-helper-vm/
+```
+
 ## Local Build Requirements
 
 - PSL1GHT, PS3DK, or another PS3 homebrew SDK with `ppu-gcc`

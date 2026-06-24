@@ -60,7 +60,7 @@ jobs:
             .ci/PS3DK/src
             .ci/PS3DK/stage/ps3dev
             ~/ps3tc/build
-          key: ps3dk-${{ runner.os }}-${{ env.PS3DK_REF }}-v1
+          key: ps3dk-${{ runner.os }}-${{ env.PS3DK_REF }}-v2
           restore-keys: |
             ps3dk-${{ runner.os }}-${{ env.PS3DK_REF }}-
 
@@ -72,6 +72,8 @@ jobs:
           source ./scripts/env.sh
           if [[ -x "$PS3DEV/ppu/bin/powerpc64-ps3-elf-gcc" \
              && -x "$PS3DEV/spu/bin/spu-elf-gcc" \
+             && -f "$PS3DEV/bin/pkg.py" \
+             && -f "$PS3DEV/bin/sfo.py" \
              && -f "$PS3DK/.ps3dk-install-manifest" ]]; then
             echo "Using cached PS3DK at $PS3DEV"
             powerpc64-ps3-elf-gcc --version | head -1
@@ -83,8 +85,17 @@ jobs:
           ./scripts/build-ppu-toolchain.sh
           ./scripts/build-spu-toolchain.sh
           ./scripts/build-psl1ght.sh
-          ./scripts/build-portlibs.sh
-          ./scripts/build-sdk.sh
+          ./scripts/install-host-tools.sh
+          make -C src/ps3dev/PSL1GHT/tools/ps3py install
+          make -C sdk install-headers install-spu-headers install-shared-spurs-spu-headers install-spu-only-headers clean-stale-spu-spurs install-version
+          make -C sdk/librsx install
+          make -C sdk/libdbgfont install
+          make -C sdk install-stub-archives
+          if [[ ! -f "$PS3DK/ppu/lib/lp64/liblv2.a" && -f "$PS3DK/ppu/lib/liblv2.a" ]]; then
+            install -d "$PS3DK/ppu/lib/lp64"
+            install -m 0644 "$PS3DK/ppu/lib/liblv2.a" "$PS3DK/ppu/lib/lp64/liblv2.a"
+          fi
+          make -C sdk install-native-aliases install-manifest
 
       - name: Configure helper
         shell: bash
