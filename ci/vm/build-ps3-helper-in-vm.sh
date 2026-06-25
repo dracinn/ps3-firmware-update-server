@@ -71,6 +71,8 @@ cp homebrew/ps3-update-helper/ps3-update-helper.self \"\$out/\"
 cp homebrew/ps3-update-helper/ps3-update-helper.fake.self \"\$out/\"
 cp homebrew/ps3-update-helper/ps3-update-helper.pkg \"\$out/\"
 cp homebrew/ps3-update-helper/ps3-update-helper.gnpdrm.pkg \"\$out/\"
+cp homebrew/ps3-update-helper/nexus-update-plugin.elf \"\$out/\"
+cp homebrew/ps3-update-helper/nexus-update-plugin.sprx \"\$out/\"
 (cd \"\$out\" && sha256sum * > SHA256SUMS.txt)
 echo \"Artifacts written to \$out\"
 "

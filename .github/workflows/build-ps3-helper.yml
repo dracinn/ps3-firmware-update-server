@@ -123,10 +123,12 @@ jobs:
           cp homebrew/ps3-update-helper/ps3-update-helper.fake.self "$out/"
           cp homebrew/ps3-update-helper/ps3-update-helper.pkg "$out/"
           cp homebrew/ps3-update-helper/ps3-update-helper.gnpdrm.pkg "$out/"
+          cp homebrew/ps3-update-helper/nexus-update-plugin.elf "$out/"
+          cp homebrew/ps3-update-helper/nexus-update-plugin.sprx "$out/"
           (cd "$out" && sha256sum * > SHA256SUMS.txt)
 
       - name: Upload helper artifacts
         uses: actions/upload-artifact@v5
         with:
-          name: ps3-update-helper-${{ github.sha }}
+          name: nexus-ps3-helper-and-plugin-${{ github.sha }}
           path: artifacts/ps3-update-helper/

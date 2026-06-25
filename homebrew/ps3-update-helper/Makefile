@@ -9,7 +9,7 @@ PPU_STRIP ?= ppu-strip
 CFLAGS := -Wall -Wextra -O2 -DSERVER_IP=\"$(SERVER_IP)\" -DPS3_HELPER_USE_PSL1GHT_NET=1
 LDFLAGS :=
 
-SOURCES := $(SOURCE_DIR)/main.c
+SOURCES := $(SOURCE_DIR)/status_app.c $(SOURCE_DIR)/ps3_update_client.c
 OBJECTS := $(patsubst $(SOURCE_DIR)/%.c,$(BUILD_DIR)/%.o,$(SOURCES))
 ELF := $(BUILD_DIR)/$(TARGET).elf
 
@@ -18,7 +18,7 @@ ELF := $(BUILD_DIR)/$(TARGET).elf
 all: $(ELF)
 
 $(ELF): $(OBJECTS)
-	$(PPU_CC) $(OBJECTS) $(LDFLAGS) -o $@
+	$(PPU_CC) $(OBJECTS) $(LDFLAGS) -lnet -lsysmodule_stub -lc_stub -lsysutil -lrt -llv2 -lm -o $@
 	-$(PPU_STRIP) $@
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
