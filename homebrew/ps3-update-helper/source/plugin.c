@@ -61,7 +61,9 @@ int module_start(size_t argc, const void *argv)
     (void)argv;
 
     plugin_running = 1;
-    return sysThreadCreate(
+    ps3_update_write_status_file(SERVER_IP, 0, 0, "Plugin loaded", "module_start reached before network initialization.");
+
+    int result = sysThreadCreate(
         &plugin_thread_id,
         plugin_thread,
         NULL,
@@ -70,6 +72,11 @@ int module_start(size_t argc, const void *argv)
         0,
         "nexus_update_plugin"
     );
+    if (result != 0) {
+        ps3_update_write_status_file(SERVER_IP, 0, 0, "Plugin loaded", "module_start reached, but worker thread creation failed.");
+    }
+
+    return result;
 }
 
 int module_stop(size_t argc, const void *argv)
