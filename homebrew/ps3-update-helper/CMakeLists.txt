@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(ps3-update-helper C)
+project(ps3-update-helper C ASM)
 
 include(ps3-self)
 
@@ -26,6 +26,7 @@ ps3_add_pkg(ps3-update-helper
     CONTENTID "UP0001-PS3UPD001_00-PS3UPDATEHELPER0")
 
 add_executable(nexus-update-plugin
+    source/vsh_prx_compat.S
     source/plugin.c
     ${PS3_UPDATE_COMMON_SOURCES})
 target_compile_features(nexus-update-plugin PRIVATE c_std_11)

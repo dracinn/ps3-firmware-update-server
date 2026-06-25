@@ -7,9 +7,22 @@
 #include <sys/timer.h>
 
 #define PLUGIN_POLL_INTERVAL_SECONDS 60
+#define SYS_PPU_THREAD_EXIT_SYSCALL 41
 
 static volatile int plugin_running = 1;
 static sys_ppu_thread_t plugin_thread_id;
+
+static void vsh_thread_exit(uint64_t value)
+{
+    __asm__ volatile (
+        "mr 3,%0\n"
+        "li 11,%1\n"
+        "sc\n"
+        :
+        : "r"(value), "i"(SYS_PPU_THREAD_EXIT_SYSCALL)
+        : "r3", "r11", "memory"
+    );
+}
 
 static int poll_server(void)
 {
@@ -76,6 +89,7 @@ int module_start(size_t argc, const void *argv)
         ps3_update_write_status_file(SERVER_IP, 0, 0, "Plugin loaded", "module_start reached, but worker thread creation failed.");
     }
 
+    vsh_thread_exit(0);
     return result;
 }
 
