@@ -3,16 +3,15 @@
 #include <stdio.h>
 #include <string.h>
 
-static void print_plugin_status_file(void)
+static void print_previous_status_file(void)
 {
     FILE *file = fopen(PS3_UPDATE_STATUS_FILE, "r");
     if (file == NULL) {
-        printf("Plugin status file: not found\n");
-        printf("Install and enable nexus-update-plugin.sprx to see background status here.\n\n");
+        printf("Previous status file: not found\n\n");
         return;
     }
 
-    printf("Plugin status file:\n");
+    printf("Previous status file:\n");
 
     char line[256];
     while (fgets(line, sizeof(line), file) != NULL) {
@@ -34,7 +33,7 @@ int main(void)
     printf("Nexus PS3 Updater Status\n");
     printf("Desktop server: http://%s\n\n", SERVER_IP);
 
-    print_plugin_status_file();
+    print_previous_status_file();
 
     if (ps3_update_net_start() != 0) {
         printf("Network init failed.\n");
@@ -64,7 +63,7 @@ int main(void)
     ps3_update_json_string(manifest_json, "name", selected_name, sizeof(selected_name));
 
     printf("Compatible selection: %s\n", selected_name);
-    printf("\nThis app only checks status. The CFW plugin performs background checks.\n");
+    printf("\nStatus saved. Use System Update > Update via Internet to install.\n");
 
     ps3_update_net_stop();
     return 0;

@@ -18,7 +18,7 @@ PS3 Firmware Update Server lets a PS3 install a selected firmware PUP through **
 
 The Kotlin desktop app can download compatible firmware from [dracinn/Firmware-Updates](https://github.com/dracinn/Firmware-Updates) or use a local `PS3UPDAT.PUP` file.
 
-The repository also includes PS3-side helper components in `homebrew/ps3-update-helper`: an Evilnat/Cobra-style CFW plugin that periodically checks the running desktop app in the background, and an installable status app for checking the connection from the console.
+The repository also includes a PS3-side helper app in `homebrew/ps3-update-helper` for checking the connection and compatible firmware selection from the console.
 
 ## Firmware Tracks
 
@@ -82,7 +82,7 @@ Downloaded or selected firmware is stored at:
 3. The PS3 downloads the spoofed update list from the local HTTP server.
 4. The PS3 downloads `PS3UPDAT.PUP` from the local HTTP server.
 
-The app also exposes local JSON endpoints for the PS3 status app and CFW plugin:
+The app also exposes local JSON endpoints for the PS3 status app:
 
 ```text
 http://<mac-ip>/api/status
@@ -114,7 +114,6 @@ dracinn/ps3-firmware-update-server
 │   ├── README.md
 │   ├── CMakeLists.txt
 │   └── source/
-│       ├── plugin.c
 │       ├── ps3_update_client.c
 │       ├── ps3_update_client.h
 │       └── status_app.c

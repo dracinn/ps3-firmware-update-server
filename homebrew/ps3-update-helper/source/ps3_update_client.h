@@ -7,7 +7,7 @@
 #define SERVER_IP "192.168.1.50"
 #endif
 
-#define PS3_UPDATE_STATUS_FILE "/dev_hdd0/tmp/nexus-update-plugin-status.txt"
+#define PS3_UPDATE_STATUS_FILE "/dev_hdd0/tmp/nexus-update-helper-status.txt"
 #define PS3_UPDATE_HTTP_PORT 80
 #define PS3_UPDATE_RESPONSE_CAPACITY 32768
 

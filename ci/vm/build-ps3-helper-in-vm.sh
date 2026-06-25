@@ -65,14 +65,13 @@ cmake -S homebrew/ps3-update-helper \
   -DSERVER_IP=\"$server_ip\"
 cmake --build homebrew/ps3-update-helper/cmake-build --verbose
 out=/workspace/artifacts/ps3-update-helper-vm
+rm -rf \"\$out\"
 mkdir -p \"\$out\"
 cp homebrew/ps3-update-helper/ps3-update-helper.elf \"\$out/\"
 cp homebrew/ps3-update-helper/ps3-update-helper.self \"\$out/\"
 cp homebrew/ps3-update-helper/ps3-update-helper.fake.self \"\$out/\"
 cp homebrew/ps3-update-helper/ps3-update-helper.pkg \"\$out/\"
 cp homebrew/ps3-update-helper/ps3-update-helper.gnpdrm.pkg \"\$out/\"
-cp homebrew/ps3-update-helper/nexus-update-plugin.elf \"\$out/\"
-cp homebrew/ps3-update-helper/nexus-update-plugin.sprx \"\$out/\"
-(cd \"\$out\" && sha256sum * > SHA256SUMS.txt)
+(cd \"\$out\" && rm -f SHA256SUMS.txt && sha256sum * > SHA256SUMS.txt)
 echo \"Artifacts written to \$out\"
 "
